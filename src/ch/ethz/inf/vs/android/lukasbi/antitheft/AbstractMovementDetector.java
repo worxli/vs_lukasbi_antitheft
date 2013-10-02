@@ -1,4 +1,4 @@
-package ch.ethz.inf.vs.android.nethz.antitheft;
+package ch.ethz.inf.vs.android.lukasbi.antitheft;
 
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;

@@ -22,6 +22,11 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity
+    		android:name="ch.ethz.inf.vs.android.lukasbi.antitheft.PrefActivity"
+   			android:theme="@style/AppTheme" >
+  		</activity>
+        <service android:name="ch.ethz.inf.vs.android.lukasbi.antitheft.AntiTheftService" />
     </application>
 
 </manifest>
