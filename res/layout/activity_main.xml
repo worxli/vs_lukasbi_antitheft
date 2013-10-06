@@ -19,7 +19,8 @@
     <SeekBar
         android:id="@+id/seekbar_sensivity"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:progress="50" />
 
     <TextView
         android:id="@+id/timeout"
@@ -27,19 +28,46 @@
         android:layout_height="wrap_content"
         android:text="@string/lbl_timeout"
         android:textAppearance="?android:attr/textAppearanceMedium" />
-    
+
     <SeekBar
         android:id="@+id/seekbar_timeout"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:max="10"
+        android:progress="5" />
 
     <ToggleButton
         android:id="@+id/run"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/btn_run_start"
-        android:textOff="@string/btn_run_stop"
-        android:textOn="@string/btn_run_start"
+        android:textOff="@string/btn_run_start"
+        android:textOn="@string/btn_run_stop"
         android:onClick="onRunClicked" />
+
+    <!-- 
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="50dp"
+        android:orientation="vertical" >
+
+        <TextView
+            android:id="@+id/txt_sensivity"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:text="@string/lbl_sensivity"
+            android:textAppearance="?android:attr/textAppearanceSmall" />
+
+        <TextView
+            android:id="@+id/txt_timeout"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:text="@string/lbl_timeout"
+            android:textAppearance="?android:attr/textAppearanceSmall" />
+    </LinearLayout>
+    -->
 
 </LinearLayout>

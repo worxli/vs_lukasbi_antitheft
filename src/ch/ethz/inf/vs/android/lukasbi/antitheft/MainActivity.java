@@ -12,10 +12,15 @@ import ch.ethz.inf.vs.android.lukasbi.antitheft.eventlisteners.TimeoutEventListe
 
 public class MainActivity extends Activity {
 	
-	/**
-	 * anti theft intent call
-	 */
+	//anti theft intent call
 	private Intent antitheft;
+	
+	// seekbars
+	SeekBar sensivitySB, timeoutSB;
+	
+	// seekbars eventlisteners
+	SensivityEventListener sensivityEL;
+	TimeoutEventListener timeoutEL;
 	
 	@Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -23,19 +28,18 @@ public class MainActivity extends Activity {
         setContentView(R.layout.activity_main);
         
         // address objects
-        SeekBar sensivitySB = (SeekBar) findViewById(R.id.seekbar_sensivity);
-        SeekBar timeoutSB = (SeekBar) findViewById(R.id.seekbar_timeout);
+        sensivitySB = (SeekBar) findViewById(R.id.seekbar_sensivity);
+        timeoutSB = (SeekBar) findViewById(R.id.seekbar_timeout);
         
         // define eventlisteners
-        SensivityEventListener sensivityEL = new SensivityEventListener();
-        TimeoutEventListener timeoutEL = new TimeoutEventListener();
+        sensivityEL = new SensivityEventListener();
+        timeoutEL = new TimeoutEventListener();
         
         sensivitySB.setOnSeekBarChangeListener(sensivityEL);
         timeoutSB.setOnSeekBarChangeListener(timeoutEL);
         
         // define antitheft service
         antitheft = new Intent(this, AntiTheftServiceImpl.class);
-      //antitheft.putExtra("KEY1", "Value to be used by the service");
     }
 
 	/**
@@ -47,10 +51,20 @@ public class MainActivity extends Activity {
 	    
 	    if (on) {
 	    	// start anti theft service
+	    	antitheft.putExtra("sensivity", sensivityEL.getSensivity());
+	    	antitheft.putExtra("timeout", timeoutEL.getTimeout());
 	    	this.startService(antitheft);
+	    	
+	    	// disable seekbars
+	    	sensivitySB.setEnabled(false);
+	    	timeoutSB.setEnabled(false);
 	    } else {
 			// stop anti theft service
 			this.stopService(antitheft);
+			
+			// enable seekbars
+			sensivitySB.setEnabled(true);
+	    	timeoutSB.setEnabled(true);
 	    }
 	}
 
