@@ -2,7 +2,9 @@ package ch.ethz.inf.vs.android.lukasbi.antitheft;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.res.Configuration;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.View;
 import android.widget.SeekBar;
@@ -21,6 +23,9 @@ public class MainActivity extends Activity {
 	// seekbars eventlisteners
 	SensivityEventListener sensivityEL;
 	TimeoutEventListener timeoutEL;
+	
+	// togglebutton active
+	boolean on = false;
 	
 	@Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,31 +47,34 @@ public class MainActivity extends Activity {
         antitheft = new Intent(this, AntiTheftServiceImpl.class);
     }
 
+	// orientation changed?
+	@Override
+	public void onConfigurationChanged(Configuration newConfig) {
+		super.onConfigurationChanged(newConfig);
+		this.setSeekBarsVisibility();
+		Log.d("#A1", "fabian");
+	}
+
 	/**
 	 * Eventhandler for the togglebutton
 	 */
 	public void onRunClicked (View v) {
 		// Is the toggle on?
-	    boolean on = ((ToggleButton) v).isChecked();
+	    on = ((ToggleButton) v).isChecked();
 	    
 	    if (on) {
 	    	// start anti theft service
 	    	antitheft.putExtra("sensivity", sensivityEL.getSensivity());
 	    	antitheft.putExtra("timeout", timeoutEL.getTimeout());
 	    	this.startService(antitheft);
-	    	
-	    	// disable seekbars
-	    	sensivitySB.setEnabled(false);
-	    	timeoutSB.setEnabled(false);
 	    } else {
 			// stop anti theft service
 			this.stopService(antitheft);
-			
-			// enable seekbars
-			sensivitySB.setEnabled(true);
-	    	timeoutSB.setEnabled(true);
 	    }
+	    
+	    this.setSeekBarsVisibility();
 	}
+	
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -75,4 +83,15 @@ public class MainActivity extends Activity {
         return true;
     }
     
+    private void setSeekBarsVisibility () {
+    	if (on) {
+    		// disable seekbars
+    		sensivitySB.setEnabled(false);
+    		timeoutSB.setEnabled(false);
+    	} else {
+    		// enable seekbars
+    		sensivitySB.setEnabled(true);
+    		timeoutSB.setEnabled(true);
+    	}
+    }
 }

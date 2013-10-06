@@ -38,7 +38,7 @@ public class AntiTheftServiceImpl extends Service implements AntiTheftService {
 		// init vibrator
 		vib = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
 		
-		/*
+		/**
 		 * create intent for notification. this will not create a new indent.
 		 * instead it will retrieve the intent that was created before (like singleton)
 		 */
@@ -75,13 +75,15 @@ public class AntiTheftServiceImpl extends Service implements AntiTheftService {
 		int sensivity = extras.getInt("sensivity");
 		int timeout = extras.getInt("timeout");
 		
-		sensivity = (sensivity == 0 ? 1 : sensivity);
+		// set default to value 2
+		sensivity = (sensivity == 0 ? 2 : sensivity);
 		movementDtr.setThreshold(0.1f/(sensivity/1000.0f));
 		movementDtr.setTimeout(timeout);
+		
 		float i = 0.1f/(sensivity/1000.0f);
 		Log.d("#A1", Float.toString(i) + ", " + timeout);
-		return super.onStartCommand(intent, flags, startId);
 		
+		return super.onStartCommand(intent, flags, startId);
 	}
 
 	@Override
@@ -96,7 +98,7 @@ public class AntiTheftServiceImpl extends Service implements AntiTheftService {
 
 	@Override
 	public void startAlarm() {
-		long[] pattern = {0, 100, 100, 200, 100, 100};
+		long[] pattern = {0, 50};
 		vib.vibrate(pattern, -1);
 	}
 
