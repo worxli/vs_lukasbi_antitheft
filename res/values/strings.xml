@@ -7,5 +7,6 @@
     <string name="lbl_timeout">Timeout</string>
 	<string name="btn_run_start">Start</string>
 	<string name="btn_run_stop">Stop</string>
+	<string name="service_name">Anti-Theft Service</string>
 	
 </resources>

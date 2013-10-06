@@ -26,7 +26,9 @@
     		android:name="ch.ethz.inf.vs.android.lukasbi.antitheft.PrefActivity"
    			android:theme="@style/AppTheme" >
   		</activity>
-        <service android:name="ch.ethz.inf.vs.android.lukasbi.antitheft.AntiTheftService" />
+        <service 
+            android:name="ch.ethz.inf.vs.android.lukasbi.antitheft.AntiTheftServiceImpl"
+            android:label="@string/service_name" />
     </application>
 
 </manifest>

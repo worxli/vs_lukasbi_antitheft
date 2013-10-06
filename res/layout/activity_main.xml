@@ -39,6 +39,7 @@
         android:layout_height="wrap_content"
         android:text="@string/btn_run_start"
         android:textOff="@string/btn_run_stop"
-        android:textOn="@string/btn_run_start" />
+        android:textOn="@string/btn_run_start"
+        android:onClick="onRunClicked" />
 
 </LinearLayout>
