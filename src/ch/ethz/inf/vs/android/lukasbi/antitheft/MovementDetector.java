@@ -8,6 +8,7 @@ public class MovementDetector extends AbstractMovementDetector {
 	public void onSensorChanged(SensorEvent event) {
 		// TODO Auto-generated method stub
 		//implement accelerometer
+		
 	}
 
 }
