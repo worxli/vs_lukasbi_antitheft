@@ -8,5 +8,6 @@
 	<string name="btn_run_start">Start</string>
 	<string name="btn_run_stop">Stop</string>
 	<string name="service_name">Anti-Theft Service</string>
+	<string name="notification_running">Running!</string>
 	
 </resources>
