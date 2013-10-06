@@ -9,8 +9,45 @@
     tools:context=".MainActivity" >
 
     <TextView
+        android:id="@+id/sensivity"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/hello_world" />
+        android:text="@string/lbl_sensivity"
+        android:textAppearance="?android:attr/textAppearanceMedium" />
+
+    <SeekBar
+        android:id="@+id/seekbar_sensivity"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/sensivity"
+        android:layout_marginTop="20dp" />
+
+    <TextView
+        android:id="@+id/timeout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_below="@+id/seekbar_sensivity"
+        android:text="@string/lbl_timeout"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:layout_marginTop="20dp" />
+    
+    <SeekBar
+        android:id="@+id/seekbar_timeout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/timeout"
+        android:layout_marginTop="20dp" />
+
+    <ToggleButton
+        android:id="@+id/run"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/seekbar_timeout"
+        android:layout_centerHorizontal="true"
+        android:text="@string/btn_run_start"
+        android:textOff="@string/btn_run_stop"
+        android:textOn="@string/btn_run_start"
+        android:layout_marginTop="20dp" />
 
 </RelativeLayout>
