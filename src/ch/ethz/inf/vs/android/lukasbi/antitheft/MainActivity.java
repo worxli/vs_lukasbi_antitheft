@@ -2,10 +2,13 @@ package ch.ethz.inf.vs.android.lukasbi.antitheft;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.SeekBar;
 import android.widget.ToggleButton;
@@ -17,31 +20,15 @@ public class MainActivity extends Activity {
 	//anti theft intent call
 	private Intent antitheft;
 	
-	// seekbars
-	SeekBar sensivitySB, timeoutSB;
-	
-	// seekbars eventlisteners
-	SensivityEventListener sensivityEL;
-	TimeoutEventListener timeoutEL;
-	
 	// togglebutton active
 	boolean on = false;
+	
+	private static final int RESULT_SETTINGS = 1;
 	
 	@Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        
-        // address objects
-        sensivitySB = (SeekBar) findViewById(R.id.seekbar_sensivity);
-        timeoutSB = (SeekBar) findViewById(R.id.seekbar_timeout);
-        
-        // define eventlisteners
-        sensivityEL = new SensivityEventListener();
-        timeoutEL = new TimeoutEventListener();
-        
-        sensivitySB.setOnSeekBarChangeListener(sensivityEL);
-        timeoutSB.setOnSeekBarChangeListener(timeoutEL);
         
         // define antitheft service
         antitheft = new Intent(this, AntiTheftServiceImpl.class);
@@ -51,8 +38,6 @@ public class MainActivity extends Activity {
 	@Override
 	public void onConfigurationChanged(Configuration newConfig) {
 		super.onConfigurationChanged(newConfig);
-		this.setSeekBarsVisibility();
-		Log.d("#A1", "fabian");
 	}
 
 	/**
@@ -62,36 +47,44 @@ public class MainActivity extends Activity {
 		// Is the toggle on?
 	    on = ((ToggleButton) v).isChecked();
 	    
+	    SharedPreferences sharedPrefs = PreferenceManager
+                .getDefaultSharedPreferences(this);
+	    
 	    if (on) {
 	    	// start anti theft service
-	    	antitheft.putExtra("sensivity", sensivityEL.getSensivity());
-	    	antitheft.putExtra("timeout", timeoutEL.getTimeout());
+	    	//antitheft.putExtra("sensivity", sensivityEL.getSensivity());
+	    	//antitheft.putExtra("timeout", timeoutEL.getTimeout());
+	    	antitheft.putExtra("sensitivity", sharedPrefs.getBoolean("sensitivity", false));
+	    	antitheft.putExtra("timeout", sharedPrefs.getString("timeout", "5"));
 	    	this.startService(antitheft);
 	    } else {
 			// stop anti theft service
 			this.stopService(antitheft);
 	    }
-	    
-	    this.setSeekBarsVisibility();
 	}
 	
 
-    @Override
+	@Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.main, menu);
+        // Inflate the menu this adds items to the action bar if it is present.
+    	if(!on){
+    		getMenuInflater().inflate(R.menu.main, menu);
+    	}
+    	
         return true;
     }
     
-    private void setSeekBarsVisibility () {
-    	if (on) {
-    		// disable seekbars
-    		sensivitySB.setEnabled(false);
-    		timeoutSB.setEnabled(false);
-    	} else {
-    		// enable seekbars
-    		sensivitySB.setEnabled(true);
-    		timeoutSB.setEnabled(true);
-    	}
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+    	
+	        switch (item.getItemId()) {
+	 
+		        case R.id.action_settings:
+		            Intent i = new Intent(this, PrefActivity.class);
+		            startActivityForResult(i, RESULT_SETTINGS);
+		            break;
+		    }
+ 
+        return true;
     }
 }

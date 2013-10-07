@@ -14,6 +14,9 @@ public class MovementDetector extends AbstractMovementDetector {
 	// timeout
 	private int timeout = 5;
 	
+	//timestamp
+	private long timestamp = 0;
+	
 	/**
 	 * You have to pass the context for the systemservices
 	 */
@@ -27,6 +30,8 @@ public class MovementDetector extends AbstractMovementDetector {
 	@Override
 	public void onSensorChanged(SensorEvent event) {
 		if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
+			
+			//get sensor data
 			float x, y, z;
 			x = event.values[0];
             y = event.values[1];
@@ -38,9 +43,15 @@ public class MovementDetector extends AbstractMovementDetector {
             
             // only issue when the the sensor values aren't wthin a certain threshold
             if (diffX >= this.threshold || diffY >= this.threshold || diffZ >= this.threshold) {
-            	//String out = String.format("%.1f, ",x) + String.format("%.1f, ",y) + String.format("%.1f",z);
-            	//Log.d("#A1", "acc: " + out);
-            	this.antiTheftService.startAlarm();
+            	
+            	//phone hasn't been moved so far
+            	if(timestamp==0){
+            		//set timestamp when phone was moved first
+            		timestamp = System.currentTimeMillis();
+            	} else if((System.currentTimeMillis()-timestamp)>timeout*1000){
+            		//TODO wait for timeout seconds and should only fire once
+            		this.antiTheftService.startAlarm();
+            	}
             	
             	oldX = x;
                 oldY = y;

@@ -7,13 +7,17 @@ import android.content.Context;
 import android.content.Intent;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
+import android.location.Criteria;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.Vibrator;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
-public class AntiTheftServiceImpl extends Service implements AntiTheftService {
+public class AntiTheftServiceImpl extends Service implements AntiTheftService, LocationListener {
 	
 	// vibrator for the alarm
 	private Vibrator vib = null;
@@ -30,6 +34,12 @@ public class AntiTheftServiceImpl extends Service implements AntiTheftService {
 	// sensor manager to retrieve the accelerometer and the sensor
 	private SensorManager sensorManager;
 	private Sensor accelerometer;
+	
+	private LocationManager locationManager;
+	private String provider;
+	
+	private double lat;
+	private double lng;
 	
 	@Override
 	public void onCreate() {
@@ -72,16 +82,14 @@ public class AntiTheftServiceImpl extends Service implements AntiTheftService {
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
 		Bundle extras = intent.getExtras();
-		int sensivity = extras.getInt("sensivity");
-		int timeout = extras.getInt("timeout");
+		boolean sensitivity = extras.getBoolean("sensitivity");
+		int timeout = Integer.parseInt(extras.getString("timeout"));
 		
-		// set default to value 2
-		sensivity = (sensivity == 0 ? 2 : sensivity);
-		movementDtr.setThreshold(0.1f/(sensivity/1000.0f));
+		movementDtr.setThreshold(sensitivity == false ? 1.2f : 2.4f );
 		movementDtr.setTimeout(timeout);
 		
-		float i = 0.1f/(sensivity/1000.0f);
-		Log.d("#A1", Float.toString(i) + ", " + timeout);
+		Log.d("Threshold", sensitivity == false ? "0.4f" : "0.8f");
+		Log.d("TTimeout", ""+timeout);
 		
 		return super.onStartCommand(intent, flags, startId);
 	}
@@ -100,12 +108,66 @@ public class AntiTheftServiceImpl extends Service implements AntiTheftService {
 	public void startAlarm() {
 		long[] pattern = {0, 50};
 		vib.vibrate(pattern, -1);
+		
+		// Get the location manager
+	    locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+	    // Define the criteria how to select the locatioin provider -> use
+	    // default
+	    Criteria criteria = new Criteria();
+	    provider = locationManager.getBestProvider(criteria, false);
+	    Location location = locationManager.getLastKnownLocation(provider);
+	    onLocationChanged(location);
+	    try {
+            locationManager.requestLocationUpdates(
+                    LocationManager.NETWORK_PROVIDER, 0, 0, this);
+            if (locationManager != null) {
+                location = locationManager
+                        .getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+                if (location != null) {
+                    lat = location.getLatitude();
+                    lng = location.getLongitude();
+                    
+                    Log.d("Location", lat + " , " + lng);
+                    //TODO send to sms/email
+                } else {
+                	Log.d("error", "no location");
+                }
+            } else {
+            	Log.d("error", "no locationmanager");
+            }
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 	}
 
 	@Override
 	public IBinder onBind(Intent arg0) {
 		// TODO Auto-generated method stub
 		return null;
+	}
+
+	@Override
+	public void onLocationChanged(Location location) {
+	    
+	  }
+
+	@Override
+	public void onProviderDisabled(String arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void onProviderEnabled(String arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void onStatusChanged(String arg0, int arg1, Bundle arg2) {
+		// TODO Auto-generated method stub
+		
 	}
 
 }

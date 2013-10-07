@@ -7,7 +7,15 @@
     <string name="lbl_timeout">Timeout</string>
 	<string name="btn_run_start">Start</string>
 	<string name="btn_run_stop">Stop</string>
-	<string name="service_name">Anti-Theft Service</string>
+	<string name="service_name">AntiTheftServiceImpl</string>
 	<string name="notification_running">Running!</string>
+	<string name="pref_cat1">Antitheft detection settings</string>
+	<string name="pref_cat2">Notification settings</string>
+	<string name="sensitivity">Sensitivity</string>
+	<string name="sensitivity_summary">default: low</string>
+	<string name="timeout">Timeout</string>
+	<string name="timeout_summary">Timeout in seconds, default: 5s</string>
+	<string name="phonenr">Phone number</string>
+	<string name="phone_summary"># where GPS coordinates are sent to</string>
 	
 </resources>
