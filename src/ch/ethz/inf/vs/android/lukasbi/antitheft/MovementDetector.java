@@ -17,6 +17,9 @@ public class MovementDetector extends AbstractMovementDetector {
 	//timestamp
 	private long timestamp = 0;
 	
+	//armed
+	private boolean armed = false;
+	
 	/**
 	 * You have to pass the context for the systemservices
 	 */
@@ -32,10 +35,9 @@ public class MovementDetector extends AbstractMovementDetector {
 		if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
 			
 			//get sensor data
-			float x, y, z;
-			x = event.values[0];
-            y = event.values[1];
-            z = event.values[2];
+			float x = event.values[0];
+            float y = event.values[1];
+            float z = event.values[2];
             
             float diffX = Math.abs(Math.abs(oldX) - Math.abs(x));
             float diffY = Math.abs(Math.abs(oldY) - Math.abs(y));
@@ -45,12 +47,23 @@ public class MovementDetector extends AbstractMovementDetector {
             if (diffX >= this.threshold || diffY >= this.threshold || diffZ >= this.threshold) {
             	
             	//phone hasn't been moved so far
-            	if(timestamp==0){
+            	if(this.timestamp==0){
             		//set timestamp when phone was moved first
-            		timestamp = System.currentTimeMillis();
-            	} else if((System.currentTimeMillis()-timestamp)>timeout*1000){
-            		//TODO wait for timeout seconds and should only fire once
+            		this.timestamp = System.currentTimeMillis();
+            	} 
+            	
+            	//check if sensor was called a second time within the timeout
+            	if(System.currentTimeMillis()-timestamp<1000*this.timeout){
+            		this.armed = true;
+            	}
+            	
+            	//check if sensor is called after timeout and has been called once within the timeout
+            	if((System.currentTimeMillis()-timestamp)>timeout*1000&&armed){
+            		armed = false;
             		this.antiTheftService.startAlarm();
+            	} else if((System.currentTimeMillis()-timestamp)>timeout*1000&&!armed){
+            		//clear timestamp if no sensor call was registered within the timeout
+            		this.timestamp = 0;
             	}
             	
             	oldX = x;
@@ -62,9 +75,5 @@ public class MovementDetector extends AbstractMovementDetector {
 
 	public void setThreshold (float threshold) {
 		this.threshold = threshold;
-	}
-
-	public void setTimeout(int timeout) {
-		this.timeout = timeout;
 	}
 }

@@ -1,5 +1,9 @@
 package ch.ethz.inf.vs.android.lukasbi.antitheft;
 
+import java.util.regex.Pattern;
+
+import android.accounts.Account;
+import android.accounts.AccountManager;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
@@ -15,7 +19,9 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.os.Vibrator;
 import android.support.v4.app.NotificationCompat;
+import android.telephony.SmsManager;
 import android.util.Log;
+import android.util.Patterns;
 
 public class AntiTheftServiceImpl extends Service implements AntiTheftService, LocationListener {
 	
@@ -35,11 +41,17 @@ public class AntiTheftServiceImpl extends Service implements AntiTheftService, L
 	private SensorManager sensorManager;
 	private Sensor accelerometer;
 	
+	//location 
 	private LocationManager locationManager;
 	private String provider;
 	
 	private double lat;
 	private double lng;
+	
+	//number to send gps data to
+	private String number;
+	
+	int timeout;
 	
 	@Override
 	public void onCreate() {
@@ -48,8 +60,50 @@ public class AntiTheftServiceImpl extends Service implements AntiTheftService, L
 		// init vibrator
 		vib = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
 		
+		// movement detector
+		sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+		accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+		
+		// register accelerometer listener
+		movementDtr = new MovementDetector(this, this);
+		sensorManager.registerListener(movementDtr, accelerometer, SensorManager.SENSOR_DELAY_NORMAL);
+	}
+	
+	@Override
+	public int onStartCommand(Intent intent, int flags, int startId) {
+		Bundle extras = intent.getExtras();
+		boolean sensitivity = extras.getBoolean("sensitivity");
+		this.timeout = Integer.parseInt(extras.getString("timeout"));
+		this.number = extras.getString("number");
+		
+		Log.d("number", number+"");
+		
+		movementDtr.setThreshold(sensitivity == false ? 1.2f : 2.4f );
+		
+		//not needed timeout is for disarming, detection timeout is fix
+		//movementDtr.setTimeout(timeout);
+		
+		Log.d("Threshold", sensitivity == false ? "0.4f" : "0.8f");
+		Log.d("Timeout", ""+timeout);
+		
+		return super.onStartCommand(intent, flags, startId);
+	}
+
+	@Override
+	public void onDestroy() {
+		// clear the ongoing notificatoin
+		this.notificatoinMgr.cancel(this.notificationId);
+		
+		// unregister from the accelerometer
+		sensorManager.unregisterListener(movementDtr);
+		super.onDestroy();
+	}
+
+	@Override
+	public void startAlarm() {
+		
 		/**
-		 * create intent for notification. this will not create a new indent.
+		 * create intent for notification. this will not create a new intent.
 		 * instead it will retrieve the intent that was created before (like singleton)
 		 */
 		Intent notificationIntent = new Intent(this, MainActivity.class);
@@ -70,43 +124,11 @@ public class AntiTheftServiceImpl extends Service implements AntiTheftService, L
 		// builds the notification and issues it
 		notificatoinMgr.notify(this.notificationId, mBuilder.build());
 		
-		// movement detector
-		sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-		accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
 		
-		// register accelerometer listener
-		movementDtr = new MovementDetector(this, this);
-		sensorManager.registerListener(movementDtr, accelerometer, SensorManager.SENSOR_DELAY_NORMAL);
-	}
-	
-	@Override
-	public int onStartCommand(Intent intent, int flags, int startId) {
-		Bundle extras = intent.getExtras();
-		boolean sensitivity = extras.getBoolean("sensitivity");
-		int timeout = Integer.parseInt(extras.getString("timeout"));
-		
-		movementDtr.setThreshold(sensitivity == false ? 1.2f : 2.4f );
-		movementDtr.setTimeout(timeout);
-		
-		Log.d("Threshold", sensitivity == false ? "0.4f" : "0.8f");
-		Log.d("TTimeout", ""+timeout);
-		
-		return super.onStartCommand(intent, flags, startId);
-	}
+		//TODO wait timestamp for alarm
 
-	@Override
-	public void onDestroy() {
-		// clear the ongoing notificatoin
-		this.notificatoinMgr.cancel(this.notificationId);
 		
-		// unregister from the accelerometer
-		sensorManager.unregisterListener(movementDtr);
-		super.onDestroy();
-	}
-
-	@Override
-	public void startAlarm() {
-		long[] pattern = {0, 50};
+		long[] pattern = {0, 50, 50, 100, 50, 100};
 		vib.vibrate(pattern, -1);
 		
 		// Get the location manager
@@ -128,7 +150,23 @@ public class AntiTheftServiceImpl extends Service implements AntiTheftService, L
                     lng = location.getLongitude();
                     
                     Log.d("Location", lat + " , " + lng);
-                    //TODO send to sms/email
+                    
+                    if(number!=null){
+                    	SmsManager sm = SmsManager.getDefault(); 
+                    	sm.sendTextMessage(number, null, "Your phone alarm has gone of at: "+ lat + ", " + lng , null, null); 
+                    } else {
+                    	Log.d("number error", "no phone number specified");
+                    	
+                    	// get users account email and send to that
+                    	Pattern emailPattern = Patterns.EMAIL_ADDRESS;
+                    	Account[] accounts = AccountManager.get(getApplicationContext()).getAccounts();
+                    	for (Account account : accounts) {
+                    	    if (emailPattern.matcher(account.name).matches()) {
+                    	        String email = account.name;
+                    	        //TODO send email to address
+                    	    }
+                    	}
+                    }
                 } else {
                 	Log.d("error", "no location");
                 }
@@ -138,7 +176,11 @@ public class AntiTheftServiceImpl extends Service implements AntiTheftService, L
             
         } catch (Exception e) {
             e.printStackTrace();
+        } finally {
+        	
+        	//TODO terminate service 
         }
+	    
 	}
 
 	@Override

@@ -8,7 +8,7 @@
 	<string name="btn_run_start">Start</string>
 	<string name="btn_run_stop">Stop</string>
 	<string name="service_name">AntiTheftServiceImpl</string>
-	<string name="notification_running">Running!</string>
+	<string name="notification_running">Disarm Antitheft!?</string>
 	<string name="pref_cat1">Antitheft detection settings</string>
 	<string name="pref_cat2">Notification settings</string>
 	<string name="sensitivity">Sensitivity</string>

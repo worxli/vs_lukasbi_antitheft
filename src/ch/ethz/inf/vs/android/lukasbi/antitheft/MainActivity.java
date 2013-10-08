@@ -52,10 +52,9 @@ public class MainActivity extends Activity {
 	    
 	    if (on) {
 	    	// start anti theft service
-	    	//antitheft.putExtra("sensivity", sensivityEL.getSensivity());
-	    	//antitheft.putExtra("timeout", timeoutEL.getTimeout());
 	    	antitheft.putExtra("sensitivity", sharedPrefs.getBoolean("sensitivity", false));
 	    	antitheft.putExtra("timeout", sharedPrefs.getString("timeout", "5"));
+	    	antitheft.putExtra("number", sharedPrefs.getString("phone", null));
 	    	this.startService(antitheft);
 	    } else {
 			// stop anti theft service
