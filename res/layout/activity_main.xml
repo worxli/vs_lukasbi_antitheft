@@ -20,29 +20,10 @@
         android:textOn="@string/btn_run_stop"
         android:onClick="onRunClicked" />
 
-    <!-- 
     <LinearLayout
+        android:id="@+id/drawing_view"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="50dp"
-        android:orientation="vertical" >
-
-        <TextView
-            android:id="@+id/txt_sensivity"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:text="@string/lbl_sensivity"
-            android:textAppearance="?android:attr/textAppearanceSmall" />
-
-        <TextView
-            android:id="@+id/txt_timeout"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:text="@string/lbl_timeout"
-            android:textAppearance="?android:attr/textAppearanceSmall" />
-    </LinearLayout>
-    -->
+        android:layout_height="match_parent"
+        android:orientation="vertical" />
 
 </LinearLayout>

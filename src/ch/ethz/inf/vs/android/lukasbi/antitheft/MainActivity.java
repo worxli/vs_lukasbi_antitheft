@@ -6,14 +6,11 @@ import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.SeekBar;
+import android.view.ViewGroup;
 import android.widget.ToggleButton;
-import ch.ethz.inf.vs.android.lukasbi.antitheft.eventlisteners.SensivityEventListener;
-import ch.ethz.inf.vs.android.lukasbi.antitheft.eventlisteners.TimeoutEventListener;
 
 public class MainActivity extends Activity {
 	
@@ -32,6 +29,11 @@ public class MainActivity extends Activity {
         
         // define antitheft service
         antitheft = new Intent(this, AntiTheftServiceImpl.class);
+        
+        // draw the accelerometer data as a "walk-path"
+        VisualisationView graphicsView = new VisualisationView(this);
+        ViewGroup v = (ViewGroup) findViewById(R.id.drawing_view);
+        v.addView(graphicsView);
     }
 
 	// orientation changed?
@@ -59,6 +61,10 @@ public class MainActivity extends Activity {
 	    } else {
 			// stop anti theft service
 			this.stopService(antitheft);
+			
+			// delete the recorded data
+			AccelDataSet ads = AccelDataSet.getInstance();
+			ads.clear();
 	    }
 	}
 	

@@ -52,6 +52,9 @@ public class AntiTheftServiceImpl extends Service implements AntiTheftService, L
 	//number to send gps data to
 	private String number;
 	
+	// the interval in seconds to issue
+	private int contInterval = 30;
+	
 	int timeout;
 	
 	@Override
@@ -68,8 +71,6 @@ public class AntiTheftServiceImpl extends Service implements AntiTheftService, L
 		// register accelerometer listener
 		movementDtr = new MovementDetector(this, this);
 		sensorManager.registerListener(movementDtr, accelerometer, SensorManager.SENSOR_DELAY_NORMAL);
-		
-		startAlarm();
 	}
 	
 	@Override
@@ -95,7 +96,9 @@ public class AntiTheftServiceImpl extends Service implements AntiTheftService, L
 	@Override
 	public void onDestroy() {
 		// clear the ongoing notificatoin
-		this.notificatoinMgr.cancel(this.notificationId);
+		if (this.notificatoinMgr != null) {
+			this.notificatoinMgr.cancel(this.notificationId);
+		}
 		
 		// unregister from the accelerometer
 		sensorManager.unregisterListener(movementDtr);
@@ -129,13 +132,15 @@ public class AntiTheftServiceImpl extends Service implements AntiTheftService, L
 		
 		//wait timeout for alarm, this wont freeze the UI because its a background service
 		SystemClock.sleep(this.timeout * 1000);
-		stopSelf();
+		
 		// ----------------------------------------
 		// Here comes the ENHANCEMENT section!
 		// ----------------------------------------
-		int i = 100;
 		// vibrate and issue a sms/mail with the gps coordinates every 30 seconds
-		while (i < 10) {
+		// TODO Robin: funtioniart das mitem while(true) ufem natel, so dass es all
+		// 30 sekunda as sms ussaloht und ds natel nid igfrŸhrt? und wenn dr serive beendisch
+		// etc...
+		while (true) {
 			long[] pattern = {0, 50, 50, 100, 50, 100};
 			vib.vibrate(pattern, -1);
 			
@@ -201,7 +206,7 @@ public class AntiTheftServiceImpl extends Service implements AntiTheftService, L
 	        }
 		    
 		    // wait for 30 seconds
-		    SystemClock.sleep(30 * 1000);
+		    SystemClock.sleep(this.contInterval * 1000);
 		}
 	}
 

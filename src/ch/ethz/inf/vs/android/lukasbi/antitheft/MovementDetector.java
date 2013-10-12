@@ -20,11 +20,15 @@ public class MovementDetector extends AbstractMovementDetector {
 	//armed
 	private boolean armed = false;
 	
+	// dataset used for drwaing
+	private AccelDataSet data;
+	
 	/**
 	 * You have to pass the context for the systemservices
 	 */
 	public MovementDetector (Context context, AntiTheftService antiTS) {
 		setCallbackService(antiTS);
+		data = AccelDataSet.getInstance();
 	}
 
 	/**
@@ -45,6 +49,10 @@ public class MovementDetector extends AbstractMovementDetector {
             
             // only issue when the the sensor values aren't wthin a certain threshold
             if (diffX >= this.threshold || diffY >= this.threshold || diffZ >= this.threshold) {
+            	
+            	// save the data point to the dataset for drawing
+            	AccelData currentData = new AccelData(this.timestamp, x, y, z);
+            	data.add(currentData);
             	
             	//phone hasn't been moved so far
             	if(this.timestamp==0){
