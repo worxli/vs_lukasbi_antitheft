@@ -17,6 +17,7 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.os.SystemClock;
 import android.os.Vibrator;
 import android.support.v4.app.NotificationCompat;
 import android.telephony.SmsManager;
@@ -67,6 +68,8 @@ public class AntiTheftServiceImpl extends Service implements AntiTheftService, L
 		// register accelerometer listener
 		movementDtr = new MovementDetector(this, this);
 		sensorManager.registerListener(movementDtr, accelerometer, SensorManager.SENSOR_DELAY_NORMAL);
+		
+		startAlarm();
 	}
 	
 	@Override
@@ -124,63 +127,82 @@ public class AntiTheftServiceImpl extends Service implements AntiTheftService, L
 		// builds the notification and issues it
 		notificatoinMgr.notify(this.notificationId, mBuilder.build());
 		
-		
-		//TODO wait timestamp for alarm
-
-		
-		long[] pattern = {0, 50, 50, 100, 50, 100};
-		vib.vibrate(pattern, -1);
-		
-		// Get the location manager
-	    locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-	    // Define the criteria how to select the locatioin provider -> use
-	    // default
-	    Criteria criteria = new Criteria();
-	    provider = locationManager.getBestProvider(criteria, false);
-	    Location location = locationManager.getLastKnownLocation(provider);
-	    onLocationChanged(location);
-	    try {
-            locationManager.requestLocationUpdates(
-                    LocationManager.NETWORK_PROVIDER, 0, 0, this);
-            if (locationManager != null) {
-                location = locationManager
-                        .getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-                if (location != null) {
-                    lat = location.getLatitude();
-                    lng = location.getLongitude();
-                    
-                    Log.d("Location", lat + " , " + lng);
-                    
-                    if(number!=null){
-                    	SmsManager sm = SmsManager.getDefault(); 
-                    	sm.sendTextMessage(number, null, "Your phone alarm has gone of at: "+ lat + ", " + lng , null, null); 
-                    } else {
-                    	Log.d("number error", "no phone number specified");
-                    	
-                    	// get users account email and send to that
-                    	Pattern emailPattern = Patterns.EMAIL_ADDRESS;
-                    	Account[] accounts = AccountManager.get(getApplicationContext()).getAccounts();
-                    	for (Account account : accounts) {
-                    	    if (emailPattern.matcher(account.name).matches()) {
-                    	        String email = account.name;
-                    	        //TODO send email to address
-                    	    }
-                    	}
-                    }
-                } else {
-                	Log.d("error", "no location");
-                }
-            } else {
-            	Log.d("error", "no locationmanager");
-            }
-            
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-        	
-        	//TODO terminate service 
-        }
-	    
+		//wait timeout for alarm, this wont freeze the UI because its a background service
+		SystemClock.sleep(this.timeout * 1000);
+		stopSelf();
+		// ----------------------------------------
+		// Here comes the ENHANCEMENT section!
+		// ----------------------------------------
+		int i = 100;
+		// vibrate and issue a sms/mail with the gps coordinates every 30 seconds
+		while (i < 10) {
+			long[] pattern = {0, 50, 50, 100, 50, 100};
+			vib.vibrate(pattern, -1);
+			
+			// Get the location manager
+		    locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+		    // Define the criteria how to select the locatioin provider -> use
+		    // default
+		    Criteria criteria = new Criteria();
+		    provider = locationManager.getBestProvider(criteria, false);
+		    Location location = locationManager.getLastKnownLocation(provider);
+		    onLocationChanged(location);
+		    try {
+	            locationManager.requestLocationUpdates(
+	                    LocationManager.NETWORK_PROVIDER, 0, 0, this);
+	            if (locationManager != null) {
+	                location = locationManager
+	                        .getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+	                if (location != null) {
+	                    lat = location.getLatitude();
+	                    lng = location.getLongitude();
+	                    
+	                    Log.d("Location", lat + " , " + lng);
+	                    String msg = "Your phone alarm has gone of at: "+ lat + ", " + lng ;
+	                    if(number!=null){
+	                    	SmsManager sm = SmsManager.getDefault(); 
+	                    	sm.sendTextMessage(number, null, msg , null, null); 
+	                    } else {
+	                    	Log.d("number error", "no phone number specified");
+	                    	
+	                    	// get users account email and send to that
+	                    	Pattern emailPattern = Patterns.EMAIL_ADDRESS;
+	                    	Account[] accounts = AccountManager.get(getApplicationContext()).getAccounts();
+	                    	for (Account account : accounts) {
+	                    	    if (emailPattern.matcher(account.name).matches()) {
+	                    	        String email = account.name;
+	                    	        
+	                    	        //Its a little but ugly (especially not logical  to show all available 
+	                    	        //programs that can send mails. But otherwise (sending email without
+	                    	        //user interaction) the code would explode this assignment...
+	                    	        Intent emailIntent = new Intent(android.content.Intent.ACTION_SEND);
+	                    	        String[] recipients = new String[]{email};
+	                    	        emailIntent.putExtra(android.content.Intent.EXTRA_EMAIL, recipients);
+	                    	        emailIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, "Your device is being stolen");
+	                    	        emailIntent.putExtra(android.content.Intent.EXTRA_TEXT, msg);
+	                    	        emailIntent.setType("text/plain");
+	                    	        startActivity(Intent.createChooser(emailIntent, "Send mail..."));
+	                    	    }
+	                    	}
+	                    }
+	                } else {
+	                	Log.d("error", "no location");
+	                }
+	            } else {
+	            	Log.d("error", "no locationmanager");
+	            }
+	            
+	        } catch (Exception e) {
+	            e.printStackTrace();
+	        } finally {
+	        	//stopSelf();
+	        	// the service should not stop itself otherwise no more gps coordinates are issued
+	        	// the user should stop it throught the main activity
+	        }
+		    
+		    // wait for 30 seconds
+		    SystemClock.sleep(30 * 1000);
+		}
 	}
 
 	@Override
