@@ -15,6 +15,7 @@ import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -27,132 +28,10 @@ import android.util.Patterns;
 
 public class AntiTheftServiceImpl extends Service implements AntiTheftService, LocationListener {
 	
-	// vibrator for the alarm
-	private Vibrator vib = null;
-		
-	//notification id
-	private int notificationId = 001;
-	
-	// notificatoin manager
-	private NotificationManager notificatoinMgr;
-	
-	// movement detector
-	private MovementDetector movementDtr;
-	
-	// sensor manager to retrieve the accelerometer and the sensor
-	private SensorManager sensorManager;
-	private Sensor accelerometer;
-	
-	//location 
-	private LocationManager locationManager;
-	private String provider;
-	
-	private double lat;
-	private double lng;
-	
-	//number to send gps data to
-	private String number;
-	
-	// the interval in seconds to issue
-	private int contInterval = 10;
-	
-	int timeout;
-	
-	// context
-	private AntiTheftServiceImpl cont = this;
-	
-	// used for delayed calls
-	private Handler mPeriodicEventHandler;
-	
-	@Override
-	public void onCreate() {
-		super.onCreate();
-		
-		// init vibrator
-		vib = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
-		
-		// movement detector
-		sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-		accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-		
-		// register accelerometer listener
-		movementDtr = new MovementDetector(this, this);
-		sensorManager.registerListener(movementDtr, accelerometer, SensorManager.SENSOR_DELAY_NORMAL);
-		
-		mPeriodicEventHandler = new Handler();
-	}
-	
-	@Override
-	public int onStartCommand(Intent intent, int flags, int startId) {
-		Bundle extras = intent.getExtras();
-		boolean sensitivity = extras.getBoolean("sensitivity");
-		this.timeout = Integer.parseInt(extras.getString("timeout"));
-		this.number = extras.getString("number");
-		
-		Log.d("number", number+"");
-		
-		movementDtr.setThreshold(sensitivity == false ? 1.2f : 2.4f );
-		
-		//not needed timeout is for disarming, detection timeout is fix
-		//movementDtr.setTimeout(timeout);
-		
-		Log.d("Threshold", sensitivity == false ? "0.4f" : "0.8f");
-		Log.d("Timeout", ""+timeout);
-		
-		return super.onStartCommand(intent, flags, startId);
-	}
+	class IssueMessager extends AsyncTask<Void, Void, Void> {
 
-	@Override
-	public void onDestroy() {
-		// clear the ongoing notificatoin
-		if (this.notificatoinMgr != null) {
-			this.notificatoinMgr.cancel(this.notificationId);
-		}
-		
-		// unregister from the accelerometer and others
-		sensorManager.unregisterListener(movementDtr);
-		mPeriodicEventHandler.removeCallbacks(invokeMessages);    
-		
-		super.onDestroy();
-	}
-
-	@Override
-	public void startAlarm() {
-		
-		/**
-		 * create intent for notification. this will not create a new intent.
-		 * instead it will retrieve the intent that was created before (like singleton)
-		 */
-		Intent notificationIntent = new Intent(this, MainActivity.class);
-		notificationIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-		PendingIntent intent = PendingIntent.getActivity(this, 0, notificationIntent, 0);
-
-		// notification builder
-		NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(this)
-			.setSmallIcon(R.drawable.ic_launcher)
-			.setContentTitle(this.getString(R.string.app_name))
-			.setContentIntent(intent)
-			.setContentText(this.getString(R.string.notification_running))
-			.setOngoing(true); // ongoing and no clear notification
-		
-		// gets an instance of the NotificationManager service
-		this.notificatoinMgr = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-		
-		// builds the notification and issues it
-		notificatoinMgr.notify(this.notificationId, mBuilder.build());
-		
-		//wait timeout for alarm, this wont freeze the UI because its a background service
-		SystemClock.sleep(this.timeout * 1000);
-		
-		// call once directly and the each interval seconds
-		Thread s = new Thread(invokeMessages);
-		s.start();
-		
-		mPeriodicEventHandler.postDelayed(invokeMessages, this.contInterval * 1000);
-	}
-	
-	private final Runnable invokeMessages = new Runnable() {
-		public void run () {
+		@Override
+		protected Void doInBackground(Void... arg0) {
 			// ----------------------------------------
 			// Here comes the ENHANCEMENT section!
 			// ----------------------------------------
@@ -223,6 +102,140 @@ public class AntiTheftServiceImpl extends Service implements AntiTheftService, L
 	        	// the service should not stop itself otherwise no more gps coordinates are issued
 	        	// the user should stop it throught the main activity
 	        }
+			return null;
+		}
+		
+	}
+	
+	// vibrator for the alarm
+	private Vibrator vib = null;
+		
+	//notification id
+	private int notificationId = 001;
+	
+	// notificatoin manager
+	private NotificationManager notificatoinMgr;
+	
+	// movement detector
+	private MovementDetector movementDtr;
+	
+	// sensor manager to retrieve the accelerometer and the sensor
+	private SensorManager sensorManager;
+	private Sensor accelerometer;
+	
+	//location 
+	private LocationManager locationManager;
+	private String provider;
+	
+	private double lat;
+	private double lng;
+	
+	//number to send gps data to
+	private String number;
+	
+	// the interval in seconds to issue
+	private int contInterval = 10;
+	
+	int timeout;
+	
+	// context
+	private AntiTheftServiceImpl cont = this;
+	
+	// used for delayed calls
+	private Handler mPeriodicEventHandler;
+	
+	@Override
+	public void onCreate() {
+		super.onCreate();
+		
+		// init vibrator
+		vib = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+		
+		// movement detector
+		sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+		accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+		
+		// register accelerometer listener
+		movementDtr = new MovementDetector(this, this);
+		sensorManager.registerListener(movementDtr, accelerometer, SensorManager.SENSOR_DELAY_NORMAL);
+		
+		// periodic data handler
+		mPeriodicEventHandler = new Handler();
+	}
+	
+	@Override
+	public int onStartCommand(Intent intent, int flags, int startId) {
+		Bundle extras = intent.getExtras();
+		boolean sensitivity = extras.getBoolean("sensitivity");
+		this.timeout = Integer.parseInt(extras.getString("timeout"));
+		this.number = extras.getString("number");
+		
+		Log.d("number", number+"");
+		
+		movementDtr.setThreshold(sensitivity == false ? 1.2f : 2.4f );
+		
+		//not needed timeout is for disarming, detection timeout is fix
+		//movementDtr.setTimeout(timeout);
+		
+		Log.d("Threshold", sensitivity == false ? "0.4f" : "0.8f");
+		Log.d("Timeout", ""+timeout);
+		
+		return super.onStartCommand(intent, flags, startId);
+	}
+
+	@Override
+	public void onDestroy() {
+		// clear the ongoing notificatoin
+		if (this.notificatoinMgr != null) {
+			this.notificatoinMgr.cancel(this.notificationId);
+		}
+		
+		// unregister from the accelerometer and others
+		sensorManager.unregisterListener(movementDtr);
+		mPeriodicEventHandler.removeCallbacks(invokeMessages);    
+		
+		super.onDestroy();
+	}
+
+	@Override
+	public void startAlarm() {
+		
+		/**
+		 * create intent for notification. this will not create a new intent.
+		 * instead it will retrieve the intent that was created before (like singleton)
+		 */
+		Intent notificationIntent = new Intent(this, MainActivity.class);
+		notificationIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+		PendingIntent intent = PendingIntent.getActivity(this, 0, notificationIntent, 0);
+
+		// notification builder
+		NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(this)
+			.setSmallIcon(R.drawable.ic_launcher)
+			.setContentTitle(this.getString(R.string.app_name))
+			.setContentIntent(intent)
+			.setContentText(this.getString(R.string.notification_running))
+			.setOngoing(true); // ongoing and no clear notification
+		
+		// gets an instance of the NotificationManager service
+		this.notificatoinMgr = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+		
+		// builds the notification and issues it
+		notificatoinMgr.notify(this.notificationId, mBuilder.build());
+		
+		//wait timeout for alarm, this wont freeze the UI because its a background service
+		SystemClock.sleep(this.timeout * 1000);
+		
+		// call once directly and the each interval seconds
+		IssueMessager im = new IssueMessager();
+		im.execute();
+		
+		mPeriodicEventHandler.postDelayed(invokeMessages, this.contInterval * 1000);
+	}
+	
+	private final Runnable invokeMessages = new Runnable() {
+		public void run () {
+			IssueMessager im = new IssueMessager();
+			im.execute();
 		}
 	};
 	
