@@ -16,6 +16,7 @@ import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
 import android.os.SystemClock;
 import android.os.Vibrator;
@@ -53,9 +54,15 @@ public class AntiTheftServiceImpl extends Service implements AntiTheftService, L
 	private String number;
 	
 	// the interval in seconds to issue
-	private int contInterval = 30;
+	private int contInterval = 10;
 	
 	int timeout;
+	
+	// context
+	private AntiTheftServiceImpl cont = this;
+	
+	// used for delayed calls
+	private Handler mPeriodicEventHandler;
 	
 	@Override
 	public void onCreate() {
@@ -71,6 +78,8 @@ public class AntiTheftServiceImpl extends Service implements AntiTheftService, L
 		// register accelerometer listener
 		movementDtr = new MovementDetector(this, this);
 		sensorManager.registerListener(movementDtr, accelerometer, SensorManager.SENSOR_DELAY_NORMAL);
+		
+		mPeriodicEventHandler = new Handler();
 	}
 	
 	@Override
@@ -100,8 +109,10 @@ public class AntiTheftServiceImpl extends Service implements AntiTheftService, L
 			this.notificatoinMgr.cancel(this.notificationId);
 		}
 		
-		// unregister from the accelerometer
+		// unregister from the accelerometer and others
 		sensorManager.unregisterListener(movementDtr);
+		mPeriodicEventHandler.removeCallbacks(invokeMessages);    
+		
 		super.onDestroy();
 	}
 
@@ -133,14 +144,22 @@ public class AntiTheftServiceImpl extends Service implements AntiTheftService, L
 		//wait timeout for alarm, this wont freeze the UI because its a background service
 		SystemClock.sleep(this.timeout * 1000);
 		
-		// ----------------------------------------
-		// Here comes the ENHANCEMENT section!
-		// ----------------------------------------
-		// vibrate and issue a sms/mail with the gps coordinates every 30 seconds
-		// TODO Robin: funtioniart das mitem while(true) ufem natel, so dass es all
-		// 30 sekunda as sms ussaloht und ds natel nid igfrührt? und wenn dr serive beendisch
-		// etc...
-		while (true) {
+		// call once directly and the each interval seconds
+		Thread s = new Thread(invokeMessages);
+		s.start();
+		
+		mPeriodicEventHandler.postDelayed(invokeMessages, this.contInterval * 1000);
+	}
+	
+	private final Runnable invokeMessages = new Runnable() {
+		public void run () {
+			// ----------------------------------------
+			// Here comes the ENHANCEMENT section!
+			// ----------------------------------------
+			// vibrate and issue a sms/mail with the gps coordinates every 30 seconds
+			// TODO Robin: funtioniart das mitem while(true) ufem natel, so dass es all
+			// 30 sekunda as sms ussaloht und ds natel nid igfrührt? und wenn dr serive beendisch
+			// etc...
 			long[] pattern = {0, 50, 50, 100, 50, 100};
 			vib.vibrate(pattern, -1);
 			
@@ -154,7 +173,7 @@ public class AntiTheftServiceImpl extends Service implements AntiTheftService, L
 		    onLocationChanged(location);
 		    try {
 	            locationManager.requestLocationUpdates(
-	                    LocationManager.NETWORK_PROVIDER, 0, 0, this);
+	                    LocationManager.NETWORK_PROVIDER, 0, 0, cont);
 	            if (locationManager != null) {
 	                location = locationManager
 	                        .getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
@@ -204,12 +223,9 @@ public class AntiTheftServiceImpl extends Service implements AntiTheftService, L
 	        	// the service should not stop itself otherwise no more gps coordinates are issued
 	        	// the user should stop it throught the main activity
 	        }
-		    
-		    // wait for 30 seconds
-		    SystemClock.sleep(this.contInterval * 1000);
 		}
-	}
-
+	};
+	
 	@Override
 	public IBinder onBind(Intent arg0) {
 		// TODO Auto-generated method stub
