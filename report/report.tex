@@ -99,8 +99,8 @@
 	\email{robing@student.ethz.ch}
 % 2nd. author
 \alignauthor Nico Previtali\\
-	\affaddr{ETH ID XX-XXX-XXX}\\
-	\email{two@student.ethz.ch}
+	\affaddr{ETH ID 11-926-433}\\
+	\email{pnico@student.ethz.ch}
 %% 3rd. author
 \alignauthor Lukas Bischofberger\\
 	\affaddr{ETH ID 11-915-907}\\
@@ -193,30 +193,92 @@ Finally the Actuators Activity (cf. \rfig{screenshot3}) employs a simplistic int
 
 \section{The Anti-Theft Alarm}
 
-\begin{enumerate}
-  \item Explain in details the sensor logic you designed which is needed to trigger the alarm. You can also include code snippet as shown in Listing 1.
-  \item What are the main methods implemented in this part? How do they interact? You can include a state transition diagram like the one shown in Figure 2.
-\end{enumerate}
+%\begin{enumerate}
+%  \item Explain in details the sensor logic you designed which is needed to trigger the alarm. You can also include code snippet as shown in Listing 1.
+%  \item What are the main methods implemented in this part? How do they interact? You can include a state transition diagram like the one shown in Figure 2.
+%\end{enumerate}
+The Anti-Theft Alarm application allows to secure your device against thiefs. In the application you can activate the sensor logic which is then supervising if the device is moved within a certain amout of time. If the device is conitiously moved within this amount of time, the sensor logic triggers the alarm. A sound file then is played and in the background, the application starts to periodically send out GPS coordinates. This GPS coordinates are sent by SMS or otherwise, if the user hasnt denoted a telephon number by mail. All the necessarily settings can comfortably set by click on the settings button of the device.
 
-\textbf{Hint:} Just like figures, code listings can convey concise information about your solution.
-However, you still need to reference and explain them in the text (cf. \rlst{code}).
-Only use a listing for really important parts and omit them if it would just be a random part of your code.
+To detect when the device is stolen we used the accelerometer sensor to recognize movements. The accelerometer measures the acceleratoin of the three dimensions of space (cf. \rfig{axis}). For each of the dimension, we measured the acceleration and compare them to some threshold. This was necessarily because the sensor registers very small changes in acceleration. Certainly we do not want to monitor very small changes and trigger fake alarm.
 
-\lstset{language=Java,caption={Descriptive Caption Text},label=code} 
+\lstset{language=Java,caption={Threshold the retrieved data to only detect wilful movements.},label=threshold} 
 \begin{lstlisting}
-@Override
-protected void onProgressUpdate(final Integer... values) {
-	textview.setText(index + " done");
-	progress.incrementProgressBy(values[0]);
+float threshold = 0.2;
+float x = event.values[0];
+float y = event.values[1];
+float z = event.values[2];
+
+float diffX = Math.abs(Math.abs(oldX) - Math.abs(x));
+float diffY = Math.abs(Math.abs(oldY) - Math.abs(y));
+float diffZ = Math.abs(Math.abs(oldZ) - Math.abs(z));
+
+// only issue when the the sensor values aren't within a certain threshold
+if (diffX >= threshold || diffY >= threshold || diffZ >= threshold) {
+	...
 }
 \end{lstlisting}
 
+\begin{figure}
+    \centering
+    \subfigure[Accelerometer]{
+        \includegraphics[height=4.2cm]{axis_device}
+        \lfig{axis}   
+    }
+    \caption{Accelerometer of the device.}
+\end{figure}
+
+The main part of the sensor logic is the service which runs in background. This service registers the movements and triggers the alarm even if the application is closed or the device is locked. The service is started when clicking on the togglebutton and stopped when disarming the device or deactivating the Anti-Theft application. Movements are regonized by the MovementDetector class. This class holds all the methods invoked by the system when the observed sensor is being changed.
+
+\lstset{language=Java,caption={MovementDetector},label=MovementDetector} 
+\begin{lstlisting}
+// register accelerometer listener
+movementDtr = new MovementDetector(this, this);
+sensorManager.registerListener(movementDtr, accelerometer, SensorManager.SENSOR_DELAY_NORMAL);
+\end{lstlisting}
+
+The settings of the applicatoin are passed to the service by using the Android standard way of passing data between intents. This extra data is then retrieved by the service in the onStartCommand method. When the service triggers the alarm an ongoing notification is notified. This notification can not be cleared by the user. If the users clicks on it, it will forward him to the MainActivity where he can disarm the alarm.
+
+\lstset{language=Java,caption={Passing data to the service},label=MovementDetector} 
+\begin{lstlisting}
+antitheft.putExtra("sensitivity", sharedPrefs.getBoolean("sensitivity", false));
+antitheft.putExtra("timeout", sharedPrefs.getString("timeout", "5"));
+antitheft.putExtra("number", sharedPrefs.getString("phone", null));
+\end{lstlisting}
+
+%\textbf{Hint:} Just like figures, code listings can convey concise information about your solution.
+%However, you still need to reference and explain them in the text (cf. \rlst{code}).
+%Only use a listing for really important parts and omit them if it would just be a random part of your code.
+
+%\lstset{language=Java,caption={Descriptive Caption Text},label=code} 
+%\begin{lstlisting}
+%@Override
+%protected void onProgressUpdate(final Integer... values) {
+%	textview.setText(index + " done");
+%	progress.incrementProgressBy(values[0]);
+%}
+%\end{lstlisting}
+
 \section{Enhancements}
 
-\begin{enumerate}
-  \item Explain the design/implementation details to visualize the sensors' readings
-  \item We didn't use a sound alarm for our application. For the local notice we used the vibration of the device. Furthermore we implemented a possibility to alarm the owner of the device through someone else's phone. That means that if an alarm goes off, the app sends a text message to a specified number. Or if there is no number specified we started to implement the possibility to send an email to the phone owner's email address. 
+%\begin{enumerate}
+%  \item Explain the design/implementation details to visualize the sensors' readings
+%  \item We didn't use a sound alarm for our application. For the local notice we used the vibration of the device. Furthermore we implemented a possibility to alarm the owner of the device through someone else's phone. That means that if an alarm goes off, the app sends a text message to a specified number. Or if there is no number specified we started to implement the possibility to send an email to the phone owner's email address. 
 \end{enumerate}
+
+The application visualizes each dimension of the recorded data. The simple curves in the two dimensional space. The x-axis is the time and the y-axis is the sensors dimension. This will mean, that the first plot is the plot of the recorded sensor data in the X dimenson, the seconds plot the one of the Y dimension and the last one in the Z dimension. To pass the data around the application we used a class instantiated with the Singleton design pattern. This class, called AccelDataSet stores all the recorded data. The plots are done using a class open source provided by Ankit Srivastava\cite{androidplot}. This is a simple class with takes arguments for the x and y axis and then plots the data with a curve.
+
+\lstset{language=Java,caption={Using the plot2d class provided by Ankit Srivastava},label=plot2d} 
+\begin{lstlisting}
+plot2d graphX = new plot2d(this, time, xValues, 1);
+plot2d graphY = new plot2d(this, time, yValues, 1);
+plot2d graphZ = new plot2d(this, time, zValues, 1);
+viewgroup.addView(graphX, params);
+viewgroup.addView(graphY, params);
+viewgroup.addView(graphZ, params);
+\end{lstlisting}
+
+Furthermore we implemented a possibility to alarm the owner of the device through someone else's phone. That means that if an alarm goes off, the app sends a text message to a specified number. Or if there is no number specified we started to implement the possibility to send an email to the phone owner's email address. 
+Simultaneously in the background when the alarm starts the application starts to read out the localization data of the device. This is continiously done defined by some interval. This messages containing the GPS data are issued asynchron so that the user can interact with the device meanwhile sending SMS in the background. The service will stop sending the GPS coordinates when the users disarms the alarm or stopps the application.
 
 \section{Conclusion}
 

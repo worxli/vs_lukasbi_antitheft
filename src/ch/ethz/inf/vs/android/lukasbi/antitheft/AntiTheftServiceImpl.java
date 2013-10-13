@@ -32,7 +32,6 @@ public class AntiTheftServiceImpl extends Service implements AntiTheftService, L
 
 		@Override
 		protected Void doInBackground(Void... arg0) {
-			Log.d("A1", "SCHEISS DISTRIBUTED");
 			// ----------------------------------------
 			// Here comes the ENHANCEMENT section!
 			// ----------------------------------------
