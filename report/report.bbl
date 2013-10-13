@@ -1,5 +1,11 @@
 \begin{thebibliography}{1}
 
+\bibitem{androidplot}
+{Android 2D Plot Class}.
+\newblock
+  \url{http://www.ankitsrivastava.net/2012/03/a-simple-2d-plot-class-for-android/}.
+\newblock Accessed on 13 Oct 2013.
+
 \bibitem{androidAPIGuides}
 {Android API Guides}.
 \newblock \url{http://developer.android.com/guide/components/index.html}.
