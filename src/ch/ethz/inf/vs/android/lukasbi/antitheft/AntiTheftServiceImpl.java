@@ -15,12 +15,12 @@ import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.media.MediaPlayer;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.SystemClock;
-import android.os.Vibrator;
 import android.support.v4.app.NotificationCompat;
 import android.telephony.SmsManager;
 import android.util.Log;
@@ -39,8 +39,6 @@ public class AntiTheftServiceImpl extends Service implements AntiTheftService, L
 			// TODO Robin: funtioniart das mitem while(true) ufem natel, so dass es all
 			// 30 sekunda as sms ussaloht und ds natel nid igfrührt? und wenn dr serive beendisch
 			// etc...
-			long[] pattern = {0, 50, 50, 100, 50, 100};
-			vib.vibrate(pattern, -1);
 			
 			// Get the location manager
 		    locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
@@ -75,9 +73,7 @@ public class AntiTheftServiceImpl extends Service implements AntiTheftService, L
 	                    	    if (emailPattern.matcher(account.name).matches()) {
 	                    	        String email = account.name;
 	                    	        
-	                    	        //Its a little but ugly (especially not logical  to show all available 
-	                    	        //programs that can send mails. But otherwise (sending email without
-	                    	        //user interaction) the code would explode this assignment...
+	                    	        // send the gps coordinates in a mail ....
 	                    	        Intent emailIntent = new Intent(android.content.Intent.ACTION_SEND);
 	                    	        String[] recipients = new String[]{email};
 	                    	        emailIntent.putExtra(android.content.Intent.EXTRA_EMAIL, recipients);
@@ -107,9 +103,6 @@ public class AntiTheftServiceImpl extends Service implements AntiTheftService, L
 		
 	}
 	
-	// vibrator for the alarm
-	private Vibrator vib = null;
-		
 	//notification id
 	private int notificationId = 001;
 	
@@ -147,9 +140,6 @@ public class AntiTheftServiceImpl extends Service implements AntiTheftService, L
 	@Override
 	public void onCreate() {
 		super.onCreate();
-		
-		// init vibrator
-		vib = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
 		
 		// movement detector
 		sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
@@ -224,6 +214,19 @@ public class AntiTheftServiceImpl extends Service implements AntiTheftService, L
 		
 		//wait timeout for alarm, this wont freeze the UI because its a background service
 		SystemClock.sleep(this.timeout * 1000);
+		
+		// start playing the alarm file
+		Runnable sound = new Runnable() {
+			@Override
+			public void run() {
+				MediaPlayer mp = MediaPlayer.create(cont, R.raw.alarm);
+				mp.setLooping(true);
+				mp.setVolume(1.0f, 1.0f);
+				mp.start();
+			}
+		};
+		Thread t = new Thread(sound);
+		t.start();
 		
 		// call once directly and the each interval seconds
 		IssueMessager im = new IssueMessager();
