@@ -32,6 +32,7 @@ public class AntiTheftServiceImpl extends Service implements AntiTheftService, L
 
 		@Override
 		protected Void doInBackground(Void... arg0) {
+			Log.d("A1", "SCHEISS DISTRIBUTED");
 			// ----------------------------------------
 			// Here comes the ENHANCEMENT section!
 			// ----------------------------------------
@@ -215,24 +216,21 @@ public class AntiTheftServiceImpl extends Service implements AntiTheftService, L
 		//wait timeout for alarm, this wont freeze the UI because its a background service
 		SystemClock.sleep(this.timeout * 1000);
 		
+		// call once directly and the each interval seconds
+		mPeriodicEventHandler.postDelayed(invokeMessages, this.contInterval * 1000);
+		
 		// start playing the alarm file
-		Runnable sound = new Runnable() {
-			@Override
-			public void run() {
+		//Runnable sound = new Runnable() {
+			//@Override
+			//public void run() {
 				MediaPlayer mp = MediaPlayer.create(cont, R.raw.alarm);
 				mp.setLooping(true);
 				mp.setVolume(1.0f, 1.0f);
 				mp.start();
-			}
-		};
-		Thread t = new Thread(sound);
-		t.start();
-		
-		// call once directly and the each interval seconds
-		IssueMessager im = new IssueMessager();
-		im.execute();
-		
-		mPeriodicEventHandler.postDelayed(invokeMessages, this.contInterval * 1000);
+			//}
+		//};
+		//Thread t = new Thread(sound);
+		//t.start();
 	}
 	
 	private final Runnable invokeMessages = new Runnable() {
