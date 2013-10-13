@@ -20,6 +20,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
 import android.os.SystemClock;
 import android.support.v4.app.NotificationCompat;
 import android.telephony.SmsManager;
@@ -32,13 +33,11 @@ public class AntiTheftServiceImpl extends Service implements AntiTheftService, L
 
 		@Override
 		protected Void doInBackground(Void... arg0) {
+			Log.d("A1", "SCHEISS DISTRIBUTED");
 			// ----------------------------------------
 			// Here comes the ENHANCEMENT section!
 			// ----------------------------------------
-			// vibrate and issue a sms/mail with the gps coordinates every 30 seconds
-			// TODO Robin: funtioniart das mitem while(true) ufem natel, so dass es all
-			// 30 sekunda as sms ussaloht und ds natel nid igfrührt? und wenn dr serive beendisch
-			// etc...
+			// vibrate and issue a sms/mail with the gps coordinates every 10 seconds
 			
 			// Get the location manager
 		    locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
@@ -46,62 +45,99 @@ public class AntiTheftServiceImpl extends Service implements AntiTheftService, L
 		    // default
 		    Criteria criteria = new Criteria();
 		    provider = locationManager.getBestProvider(criteria, false);
-		    Location location = locationManager.getLastKnownLocation(provider);
-		    onLocationChanged(location);
-		    try {
-	            locationManager.requestLocationUpdates(
-	                    LocationManager.NETWORK_PROVIDER, 0, 0, cont);
-	            if (locationManager != null) {
-	                location = locationManager
-	                        .getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-	                if (location != null) {
-	                    lat = location.getLatitude();
-	                    lng = location.getLongitude();
-	                    
-	                    Log.d("Location", lat + " , " + lng);
-	                    String msg = "Your phone alarm has gone of at: "+ lat + ", " + lng ;
-	                    if(number!=null){
-	                    	SmsManager sm = SmsManager.getDefault(); 
-	                    	sm.sendTextMessage(number, null, msg , null, null); 
-	                    } else {
-	                    	Log.d("number error", "no phone number specified");
-	                    	
-	                    	// get users account email and send to that
-	                    	Pattern emailPattern = Patterns.EMAIL_ADDRESS;
-	                    	Account[] accounts = AccountManager.get(getApplicationContext()).getAccounts();
-	                    	for (Account account : accounts) {
-	                    	    if (emailPattern.matcher(account.name).matches()) {
-	                    	        String email = account.name;
-	                    	        
-	                    	        // send the gps coordinates in a mail ....
-	                    	        Intent emailIntent = new Intent(android.content.Intent.ACTION_SEND);
-	                    	        String[] recipients = new String[]{email};
-	                    	        emailIntent.putExtra(android.content.Intent.EXTRA_EMAIL, recipients);
-	                    	        emailIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, "Your device is being stolen");
-	                    	        emailIntent.putExtra(android.content.Intent.EXTRA_TEXT, msg);
-	                    	        emailIntent.setType("text/plain");
-	                    	        startActivity(Intent.createChooser(emailIntent, "Send mail..."));
-	                    	    }
-	                    	}
+		    Location location = locationManager.getLastKnownLocation(provider);   
+		    
+		    // getting GPS status
+            isGPSEnabled = locationManager
+                    .isProviderEnabled(LocationManager.GPS_PROVIDER);
+ 
+            // getting network status
+            isNetworkEnabled = locationManager
+                    .isProviderEnabled(LocationManager.NETWORK_PROVIDER);
+            
+            if (!isGPSEnabled && !isNetworkEnabled) {
+                // no network provider is enabled
+            	Log.d("providers", "no network provider is enabled");
+            } else {
+			    try {
+			    	if (isNetworkEnabled) {
+			    		locationManager.requestSingleUpdate(
+                                LocationManager.GPS_PROVIDER,
+                                cont,
+                                Looper.getMainLooper());
+	                    Log.d("Network", "Network");
+	                    if (locationManager != null) {
+	                        location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+	                        if (location != null) {
+	                            lat = location.getLatitude();
+	                            lng = location.getLongitude();
+	                        }
 	                    }
-	                } else {
-	                	Log.d("error", "no location");
-	                }
-	            } else {
-	            	Log.d("error", "no locationmanager");
-	            }
-	            
-	        } catch (Exception e) {
-	            e.printStackTrace();
-	        } finally {
-	        	//stopSelf();
-	        	// the service should not stop itself otherwise no more gps coordinates are issued
-	        	// the user should stop it throught the main activity
-	        }
+			    	} 
+			    	
+			    	if (isGPSEnabled) {
+			    		if (location == null) {
+	                        locationManager.requestSingleUpdate(
+	                                LocationManager.GPS_PROVIDER,
+	                                cont,
+	                                Looper.getMainLooper());
+	                        Log.d("GPS Enabled", "GPS Enabled");
+	                        if (locationManager != null) {
+	                            location = locationManager
+	                                    .getLastKnownLocation(LocationManager.GPS_PROVIDER);
+	                            if (location != null) {
+	                            	lat = location.getLatitude();
+	    		                    lng = location.getLongitude();
+	                            }
+	                        }
+	                    }
+			    	}
+		                    
+		            Log.d("Location", lat + " , " + lng);
+		            String msg = "Your phone alarm has gone of at: "+ lat + ", " + lng ;
+		                    
+		                    
+                    if(number!=null){
+                    	SmsManager sm = SmsManager.getDefault(); 
+                    	sm.sendTextMessage(number, null, msg , null, null); 
+                    } else {
+                    	Log.d("number error", "no phone number specified");
+                    	
+                    	// get users account email and send to that
+                    	Pattern emailPattern = Patterns.EMAIL_ADDRESS;
+                    	Account[] accounts = AccountManager.get(getApplicationContext()).getAccounts();
+                    	for (Account account : accounts) {
+                    	    if (emailPattern.matcher(account.name).matches()) {
+                    	        String email = account.name;
+                    	        
+                    	        Log.d("email", email);
+                    	        
+                    	        // send the gps coordinates in a mail ....
+                    	        Intent emailIntent = new Intent(android.content.Intent.ACTION_SEND);
+                    	        String[] recipients = new String[]{email};
+                    	        emailIntent.putExtra(android.content.Intent.EXTRA_EMAIL, recipients);
+                    	        emailIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, "Your device is being stolen");
+                    	        emailIntent.putExtra(android.content.Intent.EXTRA_TEXT, msg);
+                    	        emailIntent.setType("text/plain");
+                    	        startActivity(Intent.createChooser(emailIntent, "Send mail..."));
+                    	    }
+                    	}
+                    }
+		            
+		        } catch (Exception e) {
+		            e.printStackTrace();
+		        }
+            }
 			return null;
 		}
 		
 	}
+	
+	// flag for GPS status
+    boolean isGPSEnabled = false;
+ 
+    // flag for network status
+    boolean isNetworkEnabled = false;
 	
 	//notification id
 	private int notificationId = 001;
@@ -129,6 +165,7 @@ public class AntiTheftServiceImpl extends Service implements AntiTheftService, L
 	// the interval in seconds to issue
 	private int contInterval = 10;
 	
+	//timeout after which alarm cannot be disabled anymore
 	int timeout;
 	
 	// context
@@ -163,15 +200,7 @@ public class AntiTheftServiceImpl extends Service implements AntiTheftService, L
 		this.timeout = Integer.parseInt(extras.getString("timeout"));
 		this.number = extras.getString("number");
 		
-		Log.d("number", number+"");
-		
 		movementDtr.setThreshold(sensitivity == false ? 1.2f : 2.4f );
-		
-		//not needed timeout is for disarming, detection timeout is fix
-		//movementDtr.setTimeout(timeout);
-		
-		Log.d("Threshold", sensitivity == false ? "0.4f" : "0.8f");
-		Log.d("Timeout", ""+timeout);
 		
 		return super.onStartCommand(intent, flags, startId);
 	}

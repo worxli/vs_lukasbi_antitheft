@@ -16,6 +16,7 @@ public class MovementDetector extends AbstractMovementDetector {
 	
 	//timestamp
 	private long timestamp = 0;
+	private long timestamp2 = 0;
 	
 	//armed
 	private boolean armed = false;
@@ -63,16 +64,22 @@ public class MovementDetector extends AbstractMovementDetector {
             	//check if sensor was called a second time within the timeout
             	if(System.currentTimeMillis()-timestamp<1000*this.timeout){
             		this.armed = true;
+            		this.timestamp2 = System.currentTimeMillis();
             	}
             	
             	//check if sensor is called after timeout and has been called once within the timeout
-            	if((System.currentTimeMillis()-timestamp)>timeout*1000&&armed){
+            	if((System.currentTimeMillis()-timestamp)>timeout*1000&&(System.currentTimeMillis()-timestamp2)<timeout*1000&&armed){
             		armed = false;
             		this.antiTheftService.startAlarm();
             		MainActivity.alarmStarted = true;
             	} else if((System.currentTimeMillis()-timestamp)>timeout*1000&&!armed){
             		//clear timestamp if no sensor call was registered within the timeout
-            		this.timestamp = 0;
+            		this.timestamp = System.currentTimeMillis();;
+            		this.timestamp2 = 0;
+            	} else if((System.currentTimeMillis()-timestamp2)>timeout*1000){
+            		this.timestamp = System.currentTimeMillis();;
+            		this.timestamp2 = 0;
+            		this.armed = false;
             	}
             	
             	oldX = x;
