@@ -36,7 +36,7 @@ public class MovementDetector extends AbstractMovementDetector {
 	 */
 	@Override
 	public void onSensorChanged(SensorEvent event) {
-		if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
+		if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER && !MainActivity.alarmStarted) {
 			
 			//get sensor data
 			float x = event.values[0];
@@ -69,6 +69,7 @@ public class MovementDetector extends AbstractMovementDetector {
             	if((System.currentTimeMillis()-timestamp)>timeout*1000&&armed){
             		armed = false;
             		this.antiTheftService.startAlarm();
+            		MainActivity.alarmStarted = true;
             	} else if((System.currentTimeMillis()-timestamp)>timeout*1000&&!armed){
             		//clear timestamp if no sensor call was registered within the timeout
             		this.timestamp = 0;

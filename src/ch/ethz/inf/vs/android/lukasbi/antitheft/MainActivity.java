@@ -27,6 +27,8 @@ public class MainActivity extends Activity {
 	
 	private static final int RESULT_SETTINGS = 1;
 	
+	public static boolean alarmStarted = false;
+	
 	@Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -61,6 +63,7 @@ public class MainActivity extends Activity {
 	    } else {
 			// stop anti theft service
 			this.stopService(antitheft);
+			MainActivity.alarmStarted = false;
 			
 			//-------------------
 			// Plotting the Data
