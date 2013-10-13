@@ -1,0 +1,29 @@
+\begin{thebibliography}{1}
+
+\bibitem{androidAPIGuides}
+{Android API Guides}.
+\newblock \url{http://developer.android.com/guide/components/index.html}.
+\newblock Accessed on 13 Oct 2013.
+
+\bibitem{androidDevTools}
+{Android Developer Tools}.
+\newblock \url{http://developer.android.com/sdk/index.html}.
+\newblock Accessed on 13 Oct 2013.
+
+\bibitem{androidAPIReference}
+{Android Reference}.
+\newblock \url{http://developer.android.com/reference/packages.html}.
+\newblock Accessed on 13 Oct 2013.
+
+\bibitem{javaHashCode}
+{Java Documentation for Object}.
+\newblock \url{http://docs.oracle.com/javase/7/docs/api/java/lang/Object.html}.
+\newblock Accessed on 13 Oct 2013.
+
+\bibitem{androidSensorEvent}
+{SensorEvent API Reference}.
+\newblock
+  \url{http://developer.android.com/reference/android/hardware/SensorEvent.html}.
+\newblock Accessed on 13 Oct 2013.
+
+\end{thebibliography}

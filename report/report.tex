@@ -95,8 +95,8 @@
 %
 % 1st. author
 \alignauthor Robin Guldener\\
-	\affaddr{ETH ID XX-XXX-XXX}\\
-	\email{one@student.ethz.ch}
+	\affaddr{ETH ID 11-930-369}\\
+	\email{robing@student.ethz.ch}
 % 2nd. author
 \alignauthor Nico Previtali\\
 	\affaddr{ETH ID XX-XXX-XXX}\\
@@ -115,10 +115,14 @@
 \begin{abstract}
 %Concisely state (i) which Android device you used, (ii) which tasks you completed and which are working correctly or limited, and (iii) what your specific enhancements are.
 
-We developed our apps for the HTC Desire Nr. 25. We completed all of the tasks and our apps worked without crashes on the device.
+We developed two mobile applications for the Android platform from the ground up for the HTC Desire Nr. 25. We completed all of the tasks and our apps worked without crashes on the device.
 \end{abstract}
 
 \section{Introduction}
+
+For this assignment we implemented two mobile applications on the Android platform using the Android Developer Tools based on Eclipse\cite{androidDevTools}. For two out of three team members this was the first time working with Android and subesequently the majority of the time spent on the project was devoted to reading the Android API Guides\cite{androidAPIGuides} and Android Reference\cite{androidAPIReference}. Whilst the documentation material is mostly very well written, there are a few corner cases where different documents describe methods in mutual disagreement and the provided GUI editing tools of the Android Developer Tools have not always worked to our satisfaction.
+
+Our team of three was split into two, with Lukas Bischoffberger and Nico Previtali implementing the Anti-Theft Alarm and Robin Guldener implementing the Sensing with Android application. The reporting task was also split accordingly with Robin Guldener additionally covering the Introduction and Conclusion parts whilst Nico Previtali and Lukas Bischoffberger also described their effors for the enhancements of the Anti-Theft Alarm.
 
 %Use the introduction for background information on the assignment.
 %See your assignment sheet for specific questions on the topic that you have to answer in this section.
@@ -128,37 +132,64 @@ We developed our apps for the HTC Desire Nr. 25. We completed all of the tasks a
 %Cite every source you used throughout the assignment.
 
 \section{Sensing with Android}
-
-\begin{enumerate}
-
-  \item Describe the user interface design for listing all available sensors of the smartphone
-  \item Describe the user interface design for continuously displaying the readings for a particular sensor
-  \item Show screenshots for the MainActivity, SensorActivity and ActuatorsActivitiy. Please include only 3 screenshots packed together as shown in Figure 1(a) and Figure1(b)
-  \item What are the main methods implemented in this part? How do they interact? You can include a state transition diagram like the one shown in Figure 2.
-\end{enumerate}
-
+The Sensing with Android application (SwA) allows any Android device owner to quickly get an overview of all the sensors available on her device and to read raw data from any sensor in realtime. Additionally, SwA also enables the user to quickly explore the actuators of their device using the builtin Actuators Activity, which supports activating a device's builtin vibrator and playing a predefined, aurally pleasant jingle of bells.
+\par
+\indent
+In the following paragraphs each Activity will be presented in detail.
 \begin{figure}
-	\centering
-	\subfigure[One Activity]{
-	    %\includegraphics[height=6cm]{screenshot1}
-	    \lfig{screenshot1}   
-	}
-	\hfill
-	\subfigure[Another Activity]{
-	    %\includegraphics[height=6cm]{screenshot2}
-	    \lfig{screenshot2}
-	}
-	\caption{Pack portrait screenshot next to each other and make them referable through the subfigure package. When next to each other, make them the same height.}
+    \centering
+    \subfigure[MainActivity]{
+        \includegraphics[height=4.2cm]{screen-sensors-main}
+        \lfig{screenshot1}   
+    }
+    \hfill
+    \subfigure[SensorsActivity]{
+        \includegraphics[height=4.2cm]{screen-sensors-details}
+        \lfig{screenshot2}
+    }
+    \hfill
+    \subfigure[ActuatorsActivity]{
+        \includegraphics[height=4.2cm]{screen-sensors-actuators}
+        \lfig{screenshot3}
+    }
+    \caption{Activities of the SwA application. Figure (a) shows an example of the sensors available on the lab-provided HTC desire. Figure (b) shows the readings for a particular time of the device's builtin accelerometer. Figure (c) displays the Actuators Activity.}
 \end{figure}
+\par
+The Main Activity (cf. \rfig{screenshot1}) is the sole entry point of the Application and thus also the only activity that is listed in the launcher. It is the heart of the SwA application and displays a ListView containing all the names of the available sensors. This allows for the efficient selection of any particular sensor. To make the interaction with the list easier for humans with thicker fingers or any potential feline users, we have increased the height of a single row in the list beyond the default value. First tests have shown a particular increase in user-satisfaction, which we could directly link to this design decision.
+\indent
+One of the main challenges of the Main Activity is how to pass on the information which sensor was selected to the sensor details activity. We have resolved this issue by using the Java provided hashCode function\cite{javaHashCode} as detailed in \rlst{hashCode}. We consider this a particularly elegant solution as it does not depend on any, not necessarily unique, sensor names and leverages existing language design features.
+
+\lstset{language=Java,caption={Passing the selected sensor using Java's hashCode method},label=hashCode} 
+\begin{lstlisting}
+// s holds a reference to the selected Sensor object
+Intent intent = new Intent(this, SensorActivity.class);
+intent.putExtra("sensor", s.hashCode());
+this.startActivity(intent);
+\end{lstlisting}
+
+\par
+\indent
+The Sensors Activity (cf. \rfig{screenshot2}) provides detailed information on the selected sensor such as the sensor type and provides realtime access to both the raw sensor data as well as the current accuracy of the measured data. To populate the ListView displaying the raw data we have implemented a SensorAdapter, which is a sensor aware implementation of the abstract Adapter class that adjusts the data source exposed to the ListView to the particular sensor currently selected. This provides a clean solution to the heterogenous data we receive from the SensorEvent class\cite{androidSensorEvent} and allows for maximum compatability even with future sensor types.
+\par
+\indent
+Finally the Actuators Activity (cf. \rfig{screenshot3}) employs a simplistic interface to allow the user to interact with the device's builtin vibrator and play a predefined sound file. The duration of the vibration can be conveniently adjusted using a SeekBar and allows vibration durations ranging from 0ms up to 1000ms, enabling the user to explore different kinds of tactile feedback in a minimal amount of time. Great care was also taken when choosing the builtin sound file and we finally settled on a pleasing, yet very well noticeable jingle of bells.
+
+% \begin{enumerate}
+
+%   \item Describe the user interface design for listing all available sensors of the smartphone
+%   \item Describe the user interface design for continuously displaying the readings for a particular sensor
+%   \item Show screenshots for the MainActivity, SensorActivity and ActuatorsActivitiy. Please include only 3 screenshots packed together as shown in Figure 1(a) and Figure1(b)
+%   \item What are the main methods implemented in this part? How do they interact? You can include a state transition diagram like the one shown in Figure 2.
+% \end{enumerate}
 
 
-\begin{figure}[h]
-	\centering
-    %\includegraphics[width=\columnwidth]{statediagram}
-    \lfig{statediagram}
-    \vspace{-5mm} % use negative white space to fix too large gaps
-	\caption{Only include useful figures. Do not simple copy something from a Web page.}
-\end{figure}
+% \begin{figure}[h]
+% 	\centering
+%     \includegraphics[width=\columnwidth]{statediagram}
+%     \lfig{statediagram}
+%     \vspace{-5mm} % use negative white space to fix too large gaps
+% 	\caption{Only include useful figures. Do not simple copy something from a Web page.}
+% \end{figure}
 
 \section{The Anti-Theft Alarm}
 
@@ -189,7 +220,7 @@ protected void onProgressUpdate(final Integer... values) {
 
 \section{Conclusion}
 
-Give an overall conclusion that summarizes the main challenges you encountered and your lessons learned.
+Finally we would like to summarize the main challenges we encountered when implementing assignment 1 and reflect on our key learnings. Clearly the main challenge was getting familiar with the Android platform and understanding its key underlying principles. Whilst we were quickly able to understand the distinction between processes, activities and services, getting used to the GUI layering and figuring out the connection between Layouts, Widgets and their data providers such as Adapters proved much more time consuming than originally anticipated. Additionally the asynchronous nature of the Anti-Theft alarm meant we also had to understand asynchronous function calls and Threading, concepts which can usually be ignored by beginners. Overall we feel we now have a good understanding of the platform and look forward to deepening our knowledge in future assignments.
 
 % The following two commands are all you need in the
 % initial runs of your .tex file to
