@@ -138,6 +138,9 @@ public class AntiTheftServiceImpl extends Service implements AntiTheftService, L
 	// used for delayed calls
 	private Handler mPeriodicEventHandler;
 	
+	// mediaplayer
+	MediaPlayer mp;
+	
 	@Override
 	public void onCreate() {
 		super.onCreate();
@@ -185,6 +188,9 @@ public class AntiTheftServiceImpl extends Service implements AntiTheftService, L
 		sensorManager.unregisterListener(movementDtr);
 		mPeriodicEventHandler.removeCallbacks(invokeMessages);    
 		
+		// disable alarm
+		mp.stop();
+		
 		super.onDestroy();
 	}
 
@@ -220,17 +226,10 @@ public class AntiTheftServiceImpl extends Service implements AntiTheftService, L
 		mPeriodicEventHandler.postDelayed(invokeMessages, this.contInterval * 1000);
 		
 		// start playing the alarm file
-		//Runnable sound = new Runnable() {
-			//@Override
-			//public void run() {
-				MediaPlayer mp = MediaPlayer.create(cont, R.raw.alarm);
-				mp.setLooping(true);
-				mp.setVolume(1.0f, 1.0f);
-				mp.start();
-			//}
-		//};
-		//Thread t = new Thread(sound);
-		//t.start();
+		mp = MediaPlayer.create(cont, R.raw.alarm);
+		mp.setLooping(true);
+		mp.setVolume(1.0f, 1.0f);
+		mp.start();
 	}
 	
 	private final Runnable invokeMessages = new Runnable() {
