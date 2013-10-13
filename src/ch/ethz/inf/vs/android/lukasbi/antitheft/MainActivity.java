@@ -54,6 +54,10 @@ public class MainActivity extends Activity {
 	    SharedPreferences sharedPrefs = PreferenceManager
                 .getDefaultSharedPreferences(this);
 	    
+	    // get the view which to put in it
+	    ViewGroup v1 = (ViewGroup) findViewById(R.id.drawing_view);
+	    v1.removeAllViews();
+	    
 	    if (on) {
 	    	// start anti theft service
 	    	antitheft.putExtra("sensitivity", sharedPrefs.getBoolean("sensitivity", false));
@@ -70,11 +74,8 @@ public class MainActivity extends Activity {
 			// important: The class which does the plotting is not coded by us!
 			// it's an opensource class found in the internet
 			//-------------------
-			// get the view which to put in it
-			ViewGroup v1 = (ViewGroup) findViewById(R.id.drawing_view);
 			
 			// this removes all child views to ensure no old data is displayed
-			v1.removeAllViews();
 			
 			// the height of each dimension plot
 			int margin = 10;
