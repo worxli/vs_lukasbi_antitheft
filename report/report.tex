@@ -170,9 +170,9 @@ Finally the Actuators Activity (cf. \rfig{screenshot3}) employs a simplistic int
 
 \section{The Anti-Theft Alarm}
 
-The Anti-Theft Alarm application allows to secure your device against thiefs. In the application you can activate the sensor logic which is then supervising if the device is moved within a certain amout of time. If the device is conitiously moved within this amount of time, the sensor logic triggers the alarm. A sound file then is played and in the background, the application starts to periodically send out GPS coordinates. This GPS coordinates are sent by SMS or otherwise, if the user hasnt denoted a telephon number by mail. All the necessarily settings can comfortably set by click on the settings button of the device.
+The Anti-Theft Alarm application allows the user to secure their device against thiefs. In the application you can activate the sensor logic, which is then supervising if the device is moved within a certain amout of time. If the device is continiously moved within a set amount of time, the sensor logic triggers the alarm: A sound file is played at full volume and in the background the application starts to periodically send out GPS coordinates. The coordinates are either sent by SMS (if a recipient number was configured by the user) or alternatively by e-mail. All the necessary settings can comfortably be set in the application's settings, which are conveniently available from the main menu.
 
-To detect when the device is stolen we used the accelerometer sensor to recognize movements. The accelerometer measures the acceleratoin of the three dimensions of space (cf. \rfig{axis}). For each of the dimension, we measured the acceleration and compare them to some threshold. This was necessarily because the sensor registers very small changes in acceleration. Certainly we do not want to monitor very small changes and trigger fake alarm.
+To detect when the device is stolen we used the accelerometer sensor to recognize movements. The accelerometer measures the acceleratoin of the device in the three dimensions of space. For each of the dimensions we measure the acceleration and compare them to some fixed threshold. This is necessary as the sensor is highly sensitive and registers even very small changes in acceleration but we only want to react to faster movements.
 
 \lstset{language=Java,caption={Threshold the retrieved data to only detect wilful movements.},label=threshold} 
 \begin{lstlisting}
@@ -191,16 +191,16 @@ if (diffX >= threshold || diffY >= threshold || diffZ >= threshold) {
 }
 \end{lstlisting}
 
-\begin{figure}
-    \centering
-    \subfigure[Accelerometer]{
-        \includegraphics[height=4.2cm]{axis_device}
-        \lfig{axis}   
-    }
-    \caption{Accelerometer of the device.}
-\end{figure}
+% \begin{figure}
+%     \centering
+%     \subfigure[Accelerometer]{
+%         \includegraphics[height=4.2cm]{axis_device}
+%         \lfig{axis}   
+%     }
+%     \caption{Accelerometer of the device.}
+% \end{figure}
 
-The main part of the sensor logic is the service which runs in background. This service registers the movements and triggers the alarm even if the application is closed or the device is locked. The service is started when clicking on the togglebutton and stopped when disarming the device or deactivating the Anti-Theft application. Movements are recognized by the MovementDetector class. This class holds all the methods invoked by the system when the observed sensor is being changed. To avoid an alarm upon non-deliberate movements we defined a timestamp after a sensor change and waited for a second change within five seconds. Then if a third change at least five seconds after the first occurrence was detected, the alarm gets started. Obviously the user is able to disable the alarm for a self-specified amount of time after the detection.
+The main part of the sensor logic is the Anti-Theft service which runs in the background. This service registers the movements and triggers the alarm even if the application is closed or the device is locked. The service is started when clicking the ToggleButton in the Main Activity and stopped when disarming the device or deactivating the Anti-Theft application. Movements are recognized by the MovementDetector class. This class holds all the methods invoked by the system when the observed sensor has changed values. To avoid an alarm upon non-deliberate movements we defined a timestamp after a sensor change and waited for a second change within five seconds. Then if a third change at least five seconds after the first occurrence was detected, the alarm gets started. Obviously the user is able to disable the alarm for a self-specified amount of time after the detection.
 
 \lstset{language=Java,caption={MovementDetector},label=MovementDetector} 
 \begin{lstlisting}
@@ -212,18 +212,18 @@ sensorManager.registerListener(movementDtr, accelerometer, SensorManager.SENSOR_
 \begin{figure}
     \centering
     \subfigure[PreferenceActivity]{
-        \includegraphics[height=4.2cm]{anti-theft-settings}
-        \lfig{screenshot1}   
+        \includegraphics[height=6cm]{anti-theft-settings}
+        \lfig{screenshot4}   
     }
     \hfill
     \subfigure[MainActivity]{
-        \includegraphics[height=4.2cm]{anti-theft-graph}
-        \lfig{screenshot2}
+        \includegraphics[height=6cm]{anti-theft-graph}
+        \lfig{screenshot5}
     }
     \caption{Activities of the AT application. Figure (a) shows the preference activity where all settings are saved. Figure (b) shows the graph with the sensor data after an alarm has gone off.}
 \end{figure}
 
-The settings of the application are passed to the service by using the Android standard way of passing data between intents. This extra data is then retrieved by the service in the onStartCommand method. When the service triggers the alarm an ongoing notification is notified. This notification can not be cleared by the user. If the users clicks on it, it will forward him to the MainActivity where he can disarm the alarm.
+The settings of the application are passed to the service by using the Android standard way of passing data between intents. This extra data is then retrieved by the service in the onStartCommand method. When the service triggers the alarm an ongoing notification is issued. This notification can not be cleared by the user. If the users clicks on it, it will forward him to the MainActivity where he can disarm the alarm.
 
 \lstset{language=Java,caption={Passing data to the service},label=MovementDetector} 
 \begin{lstlisting}
@@ -234,7 +234,7 @@ antitheft.putExtra("number", sharedPrefs.getString("phone", null));
 
 \section{Enhancements}
 
-The application visualizes each dimension of the recorded data. The simple curves in the two dimensional space. The x-axis is the time and the y-axis is the sensors dimension. This will mean, that the first plot is the plot of the recorded sensor data in the X dimenson, the seconds plot the one of the Y dimension and the last one in the Z dimension. To pass the data around the application we used a class instantiated with the Singleton design pattern. This class, called AccelDataSet stores all the recorded data. The plots are done using a class open source provided by Ankit Srivastava\cite{androidplot}. This is a simple class with takes arguments for the x and y axis and then plots the data with a curve.
+The application visualizes each dimension of the recorded data in three simple 2D plots. The x-axis is the time and the y-axis is the sensors dimension. Thus the first plot is the plot of the recorded sensor data in the X-dimenson, the second plot the one of the Y-dimension and the last one in the Z-dimension. To pass the data around the application we used a class instantiated with the Singleton design pattern. This class, called AccelDataSet stores all the recorded data. The plots are done using a class open source provided by Ankit Srivastava\cite{androidplot}. This is a simple class with takes arguments for the x and y axis and then plots the data with a curve.
 
 \lstset{language=Java,caption={Using the plot2d class provided by Ankit Srivastava},label=plot2d} 
 \begin{lstlisting}
@@ -246,8 +246,8 @@ viewgroup.addView(graphY, params);
 viewgroup.addView(graphZ, params);
 \end{lstlisting}
 
-Furthermore we implemented a possibility to alarm the owner of the device through someone else's phone. That means that if an alarm goes off, the app sends a text message to a specified number. Or if there is no number specified we tried to implement the possibility to send an email to the phone owner's email address. \\
-Simultaneously in the background when the alarm starts the application starts to read out the localization data of the device. This is continiously done defined by some interval. This messages containing the GPS data are issued asynchron so that the user can interact with the device meanwhile sending SMS in the background. The service will stop sending the GPS coordinates when the users disarms the alarm or stopps the application. Unfortunatly we couldn't test that implementation due to lack of a sim card or missing account on our phone.
+Furthermore we implemented a possibility to alarm the owner of the device through someone else's phone. This means that if an alarm goes off, the app sends a text message to a specified number. Or if there is no number specified we tried to implement the possibility to send an email to the phone owner's email address. \\
+Simultaneously in the background when the alarm starts the application starts to read out the localization data of the device. This is continiously done defined by some interval. The messages containing the GPS data are issued asynchron so that the user can interact with the device whilst the SMS are sent in the background. The service will stop sending the GPS coordinates when the user disarms the alarm or stopps the application. Unfortunatly we couldn't test this implementation due to lack of a sim card or missing email accounts on our phone.
 
 \section{Conclusion}
 
